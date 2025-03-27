@@ -1,6 +1,6 @@
 ## Car Park Puzzle（駐車場パズル）
 
-このプロジェクトは、**CPUlator（DE1-SoC Simulator）**上で動作するスライディングパズルゲーム「Car Park Puzzle（駐車場パズル）」です。  
+このプロジェクトは、CPUlator（DE1-SoC Simulator）上で動作するスライディングパズルゲーム「Car Park Puzzle（駐車場パズル）」です。  
 有名なパズルゲーム「Rush Hour」にインスパイアされており、赤い車を他の車を動かして出口まで導くことが目的です。
 
 ---
