@@ -1,3 +1,8 @@
+#define AUDIO_BASE 0xFF203040
+#define AUDIO_FIFO (volatile int *)(AUDIO_BASE + 4)
+#define AUDIO_LEFT (volatile int *)(AUDIO_BASE + 8)
+#define AUDIO_RIGHT (volatile int *)(AUDIO_BASE + 12)
+	
 volatile int pixel_buffer_start; 
 short int Buffer1[240][512];
 short int Buffer2[240][512];
@@ -44,6 +49,10 @@ char selected_car = 'A';//variable for indicating what car the user currently ha
 volatile int mouse_x = 0, mouse_y = 0; // variables for holding the mouses x and y 
 volatile int newgame = 0;
 volatile int winstatus = 0;
+volatile int movecar = 0;
+char direction = 'U';
+volatile int count = 0;//variable for timer
+
 //timer
 
 #define HEX3_HEX0_BASE  (0xFF200020) //0xFF200020 for HEX3..HEX0
@@ -1394,7 +1403,10 @@ void draw_win(int x, int y, const int sprite[][100], int width, int height) {
 }
 
 
-
+void short_delay() {
+    // This is a small busy-wait loop to burn some CPU cycles
+    for (volatile int i = 0; i < 3000; i++);  // Adjust this number as needed
+}
 
 
 //function for moving a car uses case statment for determining direction 
@@ -1421,6 +1433,12 @@ void move_car(char car_id, char direction) {
         //update by one position
         allCars[index].x += dx;
         allCars[index].y += dy;
+		 
+		 //timer
+		//display_on_hex_6(count);
+		//count = (count + 1) % 1000000;
+		//short_delay();
+		 
 			//redraw board and title 
             draw_board(80, 60, board, 150, 150);
             draw_title(30, 10, title, 250, 39);
@@ -1499,7 +1517,44 @@ void move_car(char car_id, char direction) {
 }
 
 
+void play_win_sound(void) {
+    volatile int *audio_ptr = (int *) AUDIO_BASE;
+    int fifo_space;
+    int left_sample, right_sample;
+    int melody_length = 5;
+	int samples_per_note = 400;
 
+
+    for (int note = 0; note < melody_length; note++) {
+        for (int i = 0; i < samples_per_note; i++) {
+            // check In FIFO has data
+            do {
+                fifo_space = *(audio_ptr + 1);
+            } while (((fifo_space >> 16) & 0xFF) == 0 || ((fifo_space >> 24) & 0xFF) == 0);
+
+            // read sample from In FIFO
+            left_sample  = *(audio_ptr + 2);
+            right_sample = *(audio_ptr + 3);
+
+            // check Out FIFO space
+            do {
+                fifo_space = *(audio_ptr + 1);
+            } while (((fifo_space >> 8) & 0xFF) == 0 || ((fifo_space >> 0) & 0xFF) == 0);
+
+            // write to Out FIFO
+            *(audio_ptr + 2) = left_sample;
+            *(audio_ptr + 3) = right_sample;
+        }
+
+        for (int j = 0; j < 100; j++) {
+            do {
+                fifo_space = *(audio_ptr + 1);
+            } while (((fifo_space >> 8) & 0xFF) == 0 || ((fifo_space >> 0) & 0xFF) == 0);
+            *(audio_ptr + 2) = 0;
+            *(audio_ptr + 3) = 0;
+        }
+    }
+}
 
 void check_win() {
     for (int i = 0; i < MAX_CARS; i++) {
@@ -1595,6 +1650,28 @@ void flash_leds() {
     }
 }
 
+void play_sound(void) {
+    volatile int *audio_ptr = (int *) AUDIO_BASE;
+    int fifo_space;
+    int left_sample, right_sample;
+
+    int samples = 1000;
+    for (int i = 0; i < samples; i++) {
+        do {
+            fifo_space = *(audio_ptr + 1);  
+        } while (((fifo_space >> 16) & 0xFF) == 0 || ((fifo_space >> 24) & 0xFF) == 0);
+
+        left_sample  = *(audio_ptr + 2);
+        right_sample = *(audio_ptr + 3);
+
+        do {
+            fifo_space = *(audio_ptr + 1);
+        } while (((fifo_space >> 8) & 0xFF) == 0 || ((fifo_space >> 0) & 0xFF) == 0);
+
+        *(audio_ptr + 2) = left_sample;
+        *(audio_ptr + 3) = right_sample;
+    }
+}
 
 // interrupt handler for ps2 device 
 void PS2_ISR(void) {
@@ -1624,7 +1701,9 @@ void PS2_ISR(void) {
 	char current_car = selected_car;
 	if (dir && get_valid_move_position(current_car, dir, &new_x, &new_y)) {
     	*LEDS = selected_car; //debug code to check if selected car is updated
-    	move_car(current_car, dir);
+    	movecar = 1;
+		direction = dir;
+		play_sound();
     	redraw_needed = 1;
 	}
 
@@ -1650,6 +1729,9 @@ void PS2_ISR(void) {
 			 case 0x5A: newgame = 1; break;
             default: break;
         }
+		
+		play_sound();
+		
         redraw_needed = 1;
 
     }
@@ -1659,13 +1741,15 @@ void PS2_ISR(void) {
 	
 	 else {
 	 if(byte3== 0x5A){
- newgame = 1; 
+ 		newgame = 1; 
 	 }
 
  }
+	
 
     // make sure to clear the status bit now that we have handled the interrupt 
     *INTERRUPT_STATUS |= (1 << 22);
+
 	
 }
 // 
@@ -1782,7 +1866,7 @@ int main() {
 	
 		while(!newgame);
 		winstatus = 0;
-		int count = 0;
+		//int count = 0;
 	   setup_board(); //call the function to set up the board
             // loop through cars and call appropriate draw function based on its size/orientation
     for (int i = 0; i < MAX_CARS; i++) {
@@ -1872,6 +1956,13 @@ int main() {
 			
 		}
 		else {
+		if(movecar){
+		move_car(selected_car,direction);
+		movecar = 0;
+		wait_for_vsync(); 
+        pixel_buffer_start = *(pixel_ctrl_ptr + 1);
+			
+		}
         if (redraw_needed) { 
 			//basically if we need to redraw then redraw all the parts(board,title,cars,highlight)
            // clear_screen(); // Clear screen only when needed
