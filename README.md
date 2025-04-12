@@ -58,7 +58,7 @@
 - **プラットフォーム**：CPUlator (https://cpulator.01xz.net/)
 - **対象アーキテクチャ**：RISC-V (DE1-SoC Simulator モード)
 - **開発言語**：C言語
-- **入力デバイス**：PS/2キーボード、PS/2マウス（CPUlatorによりシミュレート）
+- **入力デバイス**：PS/2キーボード（IRQ line 22から割り込み）
 - **出力デバイス**：VGAディスプレイ（CPUlator上の仮想画面）
 
 ---
