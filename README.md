@@ -1,10 +1,14 @@
 ### Rush Hour Puzzle Game – FPGA-Based Implementation
+
 ---
+
 **Project Overview**  
 Inspired by the classic *Rush Hour* puzzle game, this project challenges players to move surrounding vehicles and clear a path to guide the red car to the exit. The game was developed as part of the ECE243 (Computer Organization) course at the University of Toronto, with the goal of gaining hands-on experience in embedded systems and low-level hardware control.
+
 ---
 **Why I Built It**  
 The project served as a practical exercise in system-level C programming, memory-mapped I/O, and interrupt-driven input/output. It was implemented entirely in C and designed to run on a simulated DE1-SoC FPGA board using the CPUlator platform.
+
 ---
 ### Demonstration
 ![image](https://github.com/user-attachments/assets/59ec1de5-9b02-49c9-a887-f154ea2b9718)
