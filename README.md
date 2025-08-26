@@ -25,7 +25,7 @@
 
 ![image](https://github.com/user-attachments/assets/99e93eae-c625-41dc-bc4a-36dbe19ee9d6)
 
-[動画を見る](video.mov)
+[動画を見る](video.mp4)
 ---
 ### 使い方
 1.  Enterを押す。
