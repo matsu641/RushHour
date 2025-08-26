@@ -25,7 +25,10 @@
 
 ![image](https://github.com/user-attachments/assets/99e93eae-c625-41dc-bc4a-36dbe19ee9d6)
 
-[動画を見る](video.mp4)
+このプロジェクトのデモ動画です 👇
+
+<video src="https://github.com/matsu641/RushHour/raw/main/video.mp4" controls width="600"></video>
+
 ---
 ### 使い方
 1.  Enterを押す。
